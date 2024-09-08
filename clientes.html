@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white text-center shadow-lg">
+    <h1 class="text-3xl font-extrabold tracking-wider">Clientes</h1>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="flex-grow container mx-auto mt-8 px-4">
+    <!-- Botão de adicionar cliente -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Lista de Clientes</h2>
+      <button id="add-client-btn" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-green-500">
+        Adicionar Cliente
+      </button>
+    </div>
+
+    <!-- Tabela de Clientes -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white border rounded-lg shadow-lg">
+        <thead>
+          <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <th class="py-3 px-6 text-left">Código</th>
+            <th class="py-3 px-6 text-left">Cliente</th>
+            <th class="py-3 px-6 text-left">Ação</th>
+            <th class="py-3 px-6 text-left">Anotações</th>
+          </tr>
+        </thead>
+        <tbody id="client-table-body" class="text-gray-600 text-sm">
+          <!-- Dados da planilha serão inseridos aqui -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal para adicionar cliente -->
+  <div id="modal-add-client" class="fixed inset-0 hidden bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Adicionar Novo Cliente</h2>
+      <form id="add-client-form">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Código:</label>
+          <input type="text" id="client-code" class="w-full p-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Cliente:</label>
+          <input type="text" id="client-name" class="w-full p-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Ação:</label>
+          <input type="text" id="client-action" class="w-full p-2 border rounded">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Anotações:</label>
+          <textarea id="client-notes" class="w-full p-2 border rounded"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" id="cancel-add-client" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition-colors">Cancelar</button>
+          <button type="submit" class="bg-blue-600 text-white py-2 px-4 ml-2 rounded hover:bg-blue-700 transition-colors">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <footer class="bg-gray-900 text-gray-400 text-center py-4 mt-10">
+    <p>&copy; Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    // Mostrar ou ocultar o modal
+    const modal = document.getElementById('modal-add-client');
+    const addClientBtn = document.getElementById('add-client-btn');
+    const cancelAddClientBtn = document.getElementById('cancel-add-client');
+
+    addClientBtn.onclick = function() {
+      modal.classList.remove('hidden');
+    };
+
+    cancelAddClientBtn.onclick = function() {
+      modal.classList.add('hidden');
+    };
+
+    // Função para buscar clientes da planilha e atualizar a tabela
+    async function fetchClients() {
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbyEaQVmUjf1bpjeyetAVrBxIc3Pj6YZEAdyEZeGsY0kiFHsAkKKVzW6dvY4364wNPCC/exec');
+        if (!response.ok) {
+          throw new Error('Erro ao buscar dados');
+        }
+        const clients = await response.json();
+        
+        const tbody = document.getElementById('client-table-body');
+        tbody.innerHTML = '';  // Limpa a tabela antes de adicionar novos dados
+
+        clients.forEach(client => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="py-3 px-6">${client.codigo}</td>
+            <td class="py-3 px-6">${client.nome}</td>
+            <td class="py-3 px-6">${client.acao}</td>
+            <td class="py-3 px-6">${client.anotacoes}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
+
+    // Inicializa a tabela com os dados
+    fetchClients();
+
+    // Função para adicionar um novo cliente via POST
+    document.getElementById('add-client-form').onsubmit = async function(event) {
+      event.preventDefault();
+      
+      const codigo = document.getElementById('client-code').value;
+      const nome = document.getElementById('client-name').value;
+      const acao = document.getElementById('client-action').value;
+      const anotacoes = document.getElementById('client-notes').value;
+
+      try {
+        const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbyEaQVmUjf1bpjeyetAVrBxIc3Pj6YZEAdyEZeGsY0kiFHsAkKKVzW6dvY4364wNPCC/exec', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ codigo, nome, acao, anotacoes })
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao adicionar cliente');
+        }
+
+        const result = await response.text();
+        console.log(result);
+
+        // Atualiza a tabela após adicionar o cliente
+        fetchClients();
+
+        // Fecha o modal
+        modal.classList.add('hidden');
+        document.getElementById('add-client-form').reset();
+      } catch (error) {
+        console.error('Erro ao adicionar cliente:', error);
+      }
+    };
+  </script>
+</body>
+</html>
